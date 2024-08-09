@@ -1,0 +1,16 @@
+
+version: '3'
+
+services:
+  db:
+    image: postgres:14.3
+    restart: always
+    ports:
+      - "6432:5432" # Se usa el puerto 6432 para evitar conflictos con el puerto 5432 en caso de tener una base de datos local
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    container_name: teslodb
+    volumes:
+      - ./postgres:/var/lib/postgresql/data

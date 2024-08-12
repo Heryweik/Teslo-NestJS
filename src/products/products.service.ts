@@ -8,11 +8,10 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Product } from './entities/product.entity';
+import { DataSource, Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid';
-import { title } from 'process';
+import { Product, ProductImage } from './entities';
 
 @Injectable()
 export class ProductsService {
@@ -22,6 +21,11 @@ export class ProductsService {
     // Inject the Product repository
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(ProductImage)
+    private readonly productImageRepository: Repository<ProductImage>,
+
+    private readonly dataSource: DataSource, // Para el query runner
   ) {}
 
   async create(createProductDto: CreateProductDto) {
@@ -34,22 +38,39 @@ export class ProductsService {
       } */
       // Esta logica se traslado al BeforeInsert del entity
 
-      const product = this.productRepository.create(createProductDto); // Create a new product
+      const { images = [], ...productDetails } = createProductDto;
+
+      const product = this.productRepository.create({
+        ...productDetails,
+        images: images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        ), // Llenamos la tabla de product_images con las imagenes
+      }); // Create a new product
       await this.productRepository.save(product); // Save the product
 
-      return product;
+      return { ...product, images: images }; // Retornamos el producto con las imagenes en un arreglo y no en un objeto.
     } catch (error) {
       this.handleDBException(error);
     }
   }
 
-  findAll(paginationDto: PaginationDto) {
+  async findAll(paginationDto: PaginationDto) {
     const { limit = 10, offset = 0 } = paginationDto; // Destructuring the paginationDto
 
-    return this.productRepository.find({
+    const products = await this.productRepository.find({
       take: limit,
       skip: offset,
+      relations: {
+        // Se hace asi ya que es una relacion con otra tabla
+        images: true, // Include the images
+      },
     }); // Find all products
+
+    // Ah esto se le llama aplanar la respuesta
+    return products.map((product) => ({
+      ...product,
+      images: product.images.map((image) => image.url), // Solo retornamos las urls de las imagenes
+    }));
   }
 
   // Se puede buscar por el id y por el slug
@@ -63,13 +84,14 @@ export class ProductsService {
       // product = await this.productRepository.findOneBy({slug: term}); // Find one product by slug
 
       // Lo que se hace aqui es como construir una query en SQL pero teniendo en cuenta que no queremos dejar vacios que proboquen inyecciones SQL
-      const queryBuilder = this.productRepository.createQueryBuilder(); // Create a query builder, el query builder es una forma de hacer queries mas complejas en TypeORM
+      const queryBuilder = this.productRepository.createQueryBuilder('prod'); // Create a query builder, el query builder es una forma de hacer queries mas complejas en TypeORM
       product = await queryBuilder
         .where(`UPPER(title) =:title or slug =:slug`, {
           // Esta es una query en SQL
           title: term.toUpperCase(),
           slug: term.toLowerCase(),
         })
+        .leftJoinAndSelect('prod.images', 'prodImages') // Join the images
         .getOne(); // Get the product
     }
 
@@ -80,20 +102,57 @@ export class ProductsService {
     return product;
   }
 
+  async findOnePlain(term: string) {
+    const { images = [], ...rest } = await this.findOne(term); // Find the product
+
+    return { 
+      ...rest, 
+      images: images.map((image) => image.url) 
+    }; // Return the product
+  }
+
   async update(id: string, updateProductDto: UpdateProductDto) {
+
+    const { images, ...toUpdate } = updateProductDto;
+
     const product = await this.productRepository.preload({
-      id: id, // Find the product by id
-      ...updateProductDto,
+      id, // Find the product by id
+      ...toUpdate,
     }); // Preload the product
 
     if (!product) {
       throw new NotFoundException('Product not found');
     }
 
+    // Create query runner
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect(); // Connect to the database
+    await queryRunner.startTransaction(); // Start a transaction
+
     try {
-      await this.productRepository.save(product); // Save the product
-      return product;
+
+      if (images) {
+        await queryRunner.manager.delete(ProductImage, {product: {id}}) // Se borraran todas las imagenes del producto con el id que se pasa
+
+        // Se crean las nuevas imagenes
+        product.images = images.map((image) =>
+          this.productImageRepository.create({ url: image }),
+        ); // Create the new images
+      }
+
+      await queryRunner.manager.save(product); // Save the product
+
+      await queryRunner.commitTransaction(); // Commit the transaction
+      await queryRunner.release(); // Release the query runner
+
+      // await this.productRepository.save(product); // Save the product
+      return this.findOnePlain(id); // Con esto hacemos que se retorne el producto con las imagenes ya existentes si es que no se actualizaron
+
     } catch (error) {
+
+      await queryRunner.rollbackTransaction(); // Rollback the transaction
+      await queryRunner.release(); // Release the query runner  
+
       this.handleDBException(error);
     }
   }

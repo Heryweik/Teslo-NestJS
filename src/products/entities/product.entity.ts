@@ -1,4 +1,5 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ProductImage } from "./product-image.entity";
 
 // Esta es la representacion de la entidad producto en la base de datos
 @Entity()
@@ -46,6 +47,16 @@ export class Product {
         default: [], // Por defecto no tiene tags
     })
     tags: string[];
+
+    @OneToMany(
+        () => ProductImage,
+        (productImage) => productImage.product, // La relacion es con el campo product
+        {
+            cascade: true, // Si se elimina el producto se eliminan las imagenes
+            eager: true, // Se cargan las imagenes de una vez al usar cualquier metodo de find pero no con los query builders
+        }
+    )
+    images?: ProductImage[]; // Relacion uno a muchos con la entidad ProductImage
 
     @BeforeInsert() // Antes de insertar
     checkSlugInsert() {

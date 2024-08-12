@@ -22,7 +22,7 @@ export class ProductsController {
   // Se puede buscar por el id y por el slug
   @Get(':term')
   findOne(@Param('term') term: string) {
-    return this.productsService.findOne(term);
+    return this.productsService.findOnePlain(term); // Usamos el metodo que aplana la respuesta
   }
 
   @Patch(':id')

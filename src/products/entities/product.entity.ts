@@ -2,7 +2,7 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGenerated
 import { ProductImage } from "./product-image.entity";
 
 // Esta es la representacion de la entidad producto en la base de datos
-@Entity()
+@Entity({name: 'products'}) // El nombre de la tabla es products
 export class Product {
 
     @PrimaryGeneratedColumn('uuid') // Genera un id automatico de tipo uuid

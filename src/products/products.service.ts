@@ -176,4 +176,20 @@ export class ProductsService {
       'unexpected error, check server logs',
     );
   }
+
+  // Esta funcion se encarga de borrar todos los productos al momento de cargar el seed
+  async deleteAllProducts() {
+    const query = this.productRepository.createQueryBuilder('product'); // Create a query builder
+
+    try {
+
+      return await query
+        .delete()
+        .where({})
+        .execute(); // Delete all products
+      
+    } catch (error) {
+      this.handleDBException(error);
+    }
+  }
 }

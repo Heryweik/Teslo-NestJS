@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
 import { CommonModule } from './common/common.module';
+import { SeddModule } from './sedd/sedd.module';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { CommonModule } from './common/common.module';
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true, // Carga las entidades automaticamente
       synchronize: true, // Solo para desarrollo (crea las tablas automaticamente)
-    }), ProductsModule, CommonModule
+    }), ProductsModule, CommonModule, SeddModule
   ],
 })
 

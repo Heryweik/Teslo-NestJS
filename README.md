@@ -9,7 +9,7 @@
 ```
 yarn install
 ```
-3. Clonar el archivo ___.env.template__ y renombrar a __.env__
+3. Clonar el archivo __.env.template__ y renombrar a __.env__
 4. cambiar las variables de entorno
 5. Levantar la BD
 ```

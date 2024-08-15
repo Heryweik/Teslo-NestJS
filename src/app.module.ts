@@ -9,6 +9,7 @@ import { ProductsModule } from './products/products.module';
 import { CommonModule } from './common/common.module';
 import { SeddModule } from './sedd/sedd.module';
 import { FilesModule } from './files/files.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -28,7 +29,9 @@ import { FilesModule } from './files/files.module';
     // Configuración de la carpeta estática
     ServeStaticModule.forRoot({
       rootPath: join(__dirname,'..','public'),
-      }) 
+      }),
+
+    AuthModule 
   ],
 })
 

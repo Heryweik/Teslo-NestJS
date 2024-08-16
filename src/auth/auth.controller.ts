@@ -23,6 +23,16 @@ export class AuthController {
     return this.authService.login(loginUserDto);
   }
 
+  // este endpoint es para probar si el token es valido
+  @Get('check-status')
+  @Auth()
+  checkAuthStatus(
+    @GetUser() user: User
+  ) {
+
+    return this.authService.checkAuthStatus(user);
+  }
+
   @Get('private')
   @UseGuards(AuthGuard()) // This is the guard that will protect the route whit the JWT strategy
   testingPrivateRoute(

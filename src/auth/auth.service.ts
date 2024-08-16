@@ -25,7 +25,7 @@ export class AuthService {
 
       const user = this.userRepository.create({
         ...userData,
-        password: await bcrypt.hash(password, 10), // Se encripta la contraseña
+        password: await bcrypt.hash(password, 10), // Se encripta la contraseña, se le puede quietar el awair y usar hashsync
       });
 
       await this.userRepository.save(user);
@@ -68,6 +68,14 @@ export class AuthService {
       token: this.grtJwtToken({ id: user.id })
     };
 
+  }
+
+  async checkAuthStatus(user: User) {
+    // Se genera un nuevo token
+    return {
+      ...user,
+      token: this.grtJwtToken({ id: user.id })
+    };
   }
 
   private grtJwtToken(payload: JwtPayload) {

@@ -8,7 +8,7 @@ export class SeddController {
   constructor(private readonly seddService: SeddService) {}
 
   @Get()
-  @Auth(ValidRoles.admin) // Solo los usuarios con el rol de admin pueden ejecutar el SEED
+  // @Auth(ValidRoles.admin) // Solo los usuarios con el rol de admin pueden ejecutar el SEED
   executeSeed() {
     return this.seddService.runSeed();
   }

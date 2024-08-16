@@ -1,5 +1,6 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ProductImage } from "./product-image.entity";
+import { User } from "src/auth/entities/user.entity";
 
 // Esta es la representacion de la entidad producto en la base de datos
 @Entity({name: 'products'}) // El nombre de la tabla es products
@@ -57,6 +58,13 @@ export class Product {
         }
     )
     images?: ProductImage[]; // Relacion uno a muchos con la entidad ProductImage
+
+    @ManyToOne(
+        () => User, // entidad con la que se relaciona
+        (user) => user.product, // campo con el que se relaciona
+        {eager: true} // Carga las relaciones de una vez
+    )
+    user: User; // Relacion muchos a muchos con la entidad User
 
     @BeforeInsert() // Antes de insertar
     checkSlugInsert() {

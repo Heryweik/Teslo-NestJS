@@ -1,14 +1,17 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { CreateUserDto, LoginUserDto } from './dto';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
+import { ApiTags } from '@nestjs/swagger';
+
+import { CreateUserDto, LoginUserDto } from './dto';
 import { User } from './entities/user.entity';
 import { Auth, GetUser, RawHeaders } from './decorators';
-import { UserRoleGuard } from './guards/user-role/user-role.guard';
 import { RoleProtected } from './decorators/role-protected.decorator';
 import { ValidRoles } from './interfaces';
 
+import { UserRoleGuard } from './guards/user-role/user-role.guard';
+import { AuthService } from './auth.service';
+
+@ApiTags('Auth') // Documentacion Swagger
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

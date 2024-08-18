@@ -1,4 +1,6 @@
 
+# El docker compose airve principalmente para el desarrollo local, ya que permite levantar un ambiente de desarrollo con todas las dependencias necesarias para correr la aplicación.
+
 version: '3'
 
 services:
